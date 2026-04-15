@@ -1,0 +1,3 @@
+#!/bin/sh
+# Gradle wrapper startup script - download from https://gradle.org if needed
+exec gradle "$@"

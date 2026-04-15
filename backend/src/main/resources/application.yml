@@ -1,0 +1,21 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/drone_delivery?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8
+    username: root
+    password: qiu88527200
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+
+jwt:
+  secret: 44edc4303fd1cd7f7b1947c1e4e5cba5a0a00d2cf01c43a5984802430f21be75
+  expiration: 86400000
