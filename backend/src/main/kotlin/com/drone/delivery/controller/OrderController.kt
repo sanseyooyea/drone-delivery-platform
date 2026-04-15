@@ -3,6 +3,7 @@ package com.drone.delivery.controller
 import com.drone.delivery.common.Result
 import com.drone.delivery.dto.request.CreateOrderRequest
 import com.drone.delivery.dto.request.RejectOrderRequest
+import com.drone.delivery.mapper.AddressMapper
 import com.drone.delivery.service.OrderService
 import com.drone.delivery.service.ProductService
 import jakarta.servlet.http.HttpServletRequest
@@ -13,7 +14,8 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api")
 class OrderController(
     private val orderService: OrderService,
-    private val productService: ProductService
+    private val productService: ProductService,
+    private val addressMapper: AddressMapper
 ) {
     // 用户端
     @PostMapping("/orders")
@@ -36,7 +38,8 @@ class OrderController(
     fun getOrder(@PathVariable id: Long): Result<*> {
         val order = orderService.getOrder(id)
         val items = orderService.getOrderItems(id)
-        return Result.ok(data = mapOf("order" to order, "items" to items))
+        val address = order.addressId?.let { addressMapper.selectById(it) }
+        return Result.ok(data = mapOf("order" to order, "items" to items, "address" to address))
     }
 
     @PutMapping("/orders/{id}/cancel")

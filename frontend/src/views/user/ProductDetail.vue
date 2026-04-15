@@ -83,7 +83,7 @@
         <template #header>
           <span>商品详情</span>
         </template>
-        <div class="rich-content" v-html="product.detail || '暂无详细描述'"></div>
+        <div class="rich-content">{{ product.description || '暂无详细描述' }}</div>
       </el-card>
     </div>
   </div>

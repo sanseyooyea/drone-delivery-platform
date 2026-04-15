@@ -83,35 +83,41 @@
 
     <!-- 订单详情弹窗 -->
     <el-dialog v-model="detailDialogVisible" title="订单详情" width="550px" destroy-on-close>
-      <el-descriptions :column="1" border v-if="currentOrder">
-        <el-descriptions-item label="订单编号">{{ currentOrder.orderNo }}</el-descriptions-item>
-        <el-descriptions-item label="订单金额">
-          ¥{{ currentOrder.totalPrice?.toFixed(2) }}
-        </el-descriptions-item>
-        <el-descriptions-item label="下单时间">{{ currentOrder.createTime }}</el-descriptions-item>
-        <el-descriptions-item label="订单状态">
-          <el-tag :type="statusTagType(currentOrder.status)">
-            {{ statusLabel(currentOrder.status) }}
-          </el-tag>
-        </el-descriptions-item>
-        <el-descriptions-item label="收货地址">
-          {{ currentOrder.address || '-' }}
-        </el-descriptions-item>
-        <el-descriptions-item label="备注">
-          {{ currentOrder.remark || '无' }}
-        </el-descriptions-item>
-      </el-descriptions>
+      <div v-loading="detailLoading">
+        <el-descriptions :column="1" border v-if="currentOrder">
+          <el-descriptions-item label="订单编号">{{ currentOrder.orderNo }}</el-descriptions-item>
+          <el-descriptions-item label="订单金额">
+            <span style="color: #e6a23c; font-weight: bold">¥{{ currentOrder.totalPrice }}</span>
+          </el-descriptions-item>
+          <el-descriptions-item label="下单时间">{{ currentOrder.createTime }}</el-descriptions-item>
+          <el-descriptions-item label="订单状态">
+            <el-tag :type="statusTagType(currentOrder.status)">
+              {{ statusLabel(currentOrder.status) }}
+            </el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="收货地址">
+            <template v-if="currentOrderAddress">
+              {{ currentOrderAddress.contactName }} {{ currentOrderAddress.contactPhone }}<br/>
+              {{ currentOrderAddress.address }}
+            </template>
+            <template v-else>-</template>
+          </el-descriptions-item>
+          <el-descriptions-item label="备注">
+            {{ currentOrder.remark || '无' }}
+          </el-descriptions-item>
+        </el-descriptions>
 
-      <template v-if="currentOrder?.items?.length">
-        <h4 style="margin: 16px 0 8px">商品明细</h4>
-        <el-table :data="currentOrder.items" border size="small">
-          <el-table-column prop="productName" label="商品" />
-          <el-table-column prop="quantity" label="数量" width="80" align="center" />
-          <el-table-column label="小计" width="100" align="center">
-            <template #default="{ row }">¥{{ (row.price * row.quantity).toFixed(2) }}</template>
-          </el-table-column>
-        </el-table>
-      </template>
+        <template v-if="currentOrderItems.length">
+          <h4 style="margin: 16px 0 8px">商品明细</h4>
+          <el-table :data="currentOrderItems" border size="small">
+            <el-table-column prop="productName" label="商品" />
+            <el-table-column prop="quantity" label="数量" width="80" align="center" />
+            <el-table-column label="小计" width="100" align="center">
+              <template #default="{ row }">¥{{ (row.productPrice * row.quantity).toFixed(2) }}</template>
+            </el-table-column>
+          </el-table>
+        </template>
+      </div>
 
       <template #footer>
         <el-button @click="detailDialogVisible = false">关闭</el-button>
@@ -123,7 +129,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getMerchantOrders, acceptOrder, rejectOrder, markOrderReady } from '@/api/order'
+import { getMerchantOrders, acceptOrder, rejectOrder, markOrderReady, getOrder } from '@/api/order'
 
 const loading = ref(false)
 const rejecting = ref(false)
@@ -132,7 +138,10 @@ const activeTab = ref('pending')
 
 const rejectDialogVisible = ref(false)
 const detailDialogVisible = ref(false)
+const detailLoading = ref(false)
 const currentOrder = ref(null)
+const currentOrderItems = ref([])
+const currentOrderAddress = ref(null)
 const rejectFormRef = ref(null)
 
 const pagination = reactive({
@@ -240,9 +249,21 @@ const handleReady = async (row) => {
   }
 }
 
-const openDetailDialog = (row) => {
+const openDetailDialog = async (row) => {
   currentOrder.value = row
+  currentOrderItems.value = []
+  currentOrderAddress.value = null
   detailDialogVisible.value = true
+  detailLoading.value = true
+  try {
+    const res = await getOrder(row.id)
+    currentOrderItems.value = res.data.items || []
+    currentOrderAddress.value = res.data.address || null
+  } catch {
+    ElMessage.error('获取订单详情失败')
+  } finally {
+    detailLoading.value = false
+  }
 }
 
 onMounted(() => {

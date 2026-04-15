@@ -235,7 +235,7 @@ const handleDelete = async (id) => {
 
 const handleToggle = async (row) => {
   try {
-    await toggleProductStatus(row.id)
+    await toggleProductStatus(row.id, row.status === 1 ? 0 : 1)
     ElMessage.success(row.status === 1 ? '已下架' : '已上架')
     fetchProducts()
   } catch {

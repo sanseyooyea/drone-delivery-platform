@@ -120,7 +120,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Picture } from '@element-plus/icons-vue'
 import { getOrder, cancelOrder, confirmReceive } from '@/api/order'
-import { getAddresses } from '@/api/address'
 
 const route = useRoute()
 const router = useRouter()
@@ -160,18 +159,10 @@ const fetchOrder = async () => {
   loading.value = true
   try {
     const res = await getOrder(route.params.id)
-    // 后端返回 { order: {...}, items: [...] }
+    // 后端返回 { order, items, address }
     order.value = res.data.order
     items.value = res.data.items || []
-
-    // 加载收货地址
-    if (order.value.addressId) {
-      try {
-        const addrRes = await getAddresses()
-        const list = addrRes.data || []
-        address.value = list.find(a => a.id === order.value.addressId) || null
-      } catch {}
-    }
+    address.value = res.data.address || null
   } catch (e) {
     ElMessage.error('获取订单详情失败')
   } finally {
