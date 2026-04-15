@@ -56,7 +56,7 @@
           <span class="total">合计：<b>¥{{ order.totalPrice }}</b></span>
           <div class="actions">
             <el-button
-              v-if="order.status === 'pending'"
+              v-if="order.status === 0"
               type="danger"
               size="small"
               plain
@@ -65,7 +65,7 @@
               取消订单
             </el-button>
             <el-button
-              v-if="order.status === 'delivering'"
+              v-if="order.status === 2"
               type="success"
               size="small"
               @click.stop="handleConfirm(order)"
@@ -110,19 +110,29 @@ const pageSize = ref(10)
 const total = ref(0)
 
 const statusMap = {
-  pending: '待接单',
-  preparing: '备货中',
-  delivering: '配送中',
-  completed: '已完成',
-  cancelled: '已取消',
+  0: '待接单',
+  1: '备货中',
+  2: '配送中',
+  3: '已完成',
+  4: '已取消',
+  5: '已拒单',
 }
 
 const statusTagMap = {
-  pending: 'warning',
-  preparing: 'info',
-  delivering: '',
-  completed: 'success',
-  cancelled: 'danger',
+  0: 'warning',
+  1: 'info',
+  2: '',
+  3: 'success',
+  4: 'danger',
+  5: 'danger',
+}
+
+const tabStatusMap = {
+  all: undefined,
+  pending: 0,
+  delivering: 2,
+  completed: 3,
+  cancelled: 4,
 }
 
 const statusText = (status) => statusMap[status] || status
@@ -135,8 +145,9 @@ const fetchOrders = async () => {
       page: page.value,
       size: pageSize.value,
     }
-    if (activeTab.value !== 'all') {
-      params.status = activeTab.value
+    const statusVal = tabStatusMap[activeTab.value]
+    if (statusVal !== undefined) {
+      params.status = statusVal
     }
     const res = await getOrders(params)
     orders.value = res.data?.list || []
